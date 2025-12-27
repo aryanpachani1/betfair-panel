@@ -181,11 +181,9 @@
 
     <div class="card" style="grid-column:span 6">
       <h3>Market Info</h3>
-      <label>Total Matched Amount</label>
-      <input id="matched" placeholder="e.g. 10,000,000" oninput="analyze()">
-      <p class="hint">Based on ladder load, system will auto-split matched amount team-wise.</p></h3>
-      <label>Total Matched Amount</label>
-      <input id="matched" placeholder="e.g. 10,000,000">
+      <label>Total Matched Amount (GBP)</label>
+      <input id="matched" placeholder="e.g. 1,000,000" oninput="analyze()">
+      <p class="hint">System auto-calculates team-wise money distribution in GBP.</p>
     </div>
 
     <div class="card" style="grid-column:span 6">
@@ -278,14 +276,14 @@ function analyze(){
   barA.style.width = pctA+'%';
   barB.style.width = pctB+'%';
 
-  labelA.innerText = `${A} ${pctA}% (₹${amtA.toLocaleString()})`;
-  labelB.innerText = `${B} ${pctB}% (₹${amtB.toLocaleString()})`;
+  labelA.innerText = `${A} ${pctA}% (£${amtA.toLocaleString()})`;
+  labelB.innerText = `${B} ${pctB}% (£${amtB.toLocaleString()})`;
 
   const loaded = loadA>loadB ? A : B;
 
   insights.innerHTML = `
     <div class="pill green">Loaded Team: ${loaded}</div>
-    <div class="pill amber">Matched Split → ${A}: ₹${amtA.toLocaleString()} | ${B}: ₹${amtB.toLocaleString()}</div>
+    <div class="pill amber">Matched Split → ${A}: £${amtA.toLocaleString()} | ${B}: £${amtB.toLocaleString()}</div>
     <div class="pill red">Safer Entry: ${loaded === A ? B : A}</div>
     <p style="margin-top:10px;font-size:13px;color:var(--muted)">
       Heavy public load usually traps late entries. Watch odds compression for hedge timing.
