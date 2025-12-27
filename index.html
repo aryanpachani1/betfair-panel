@@ -207,3 +207,124 @@
 
 <div class="wrap">
   <div class="grid">
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Team Setup</h3>
+      <div class="row">
+        <div><label>Team A</label><input id="teamA" placeholder="Team A"></div>
+        <div><label>Team B</label><input id="teamB" placeholder="Team B"></div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Market Info</h3>
+      <label>Total Matched Amount (GBP)</label>
+      <input id="matched" placeholder="e.g. 1,000,000" oninput="analyze()">
+    </div>
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Team A Ladder</h3>
+      <label>Back (Top 3)</label>
+      <div class="row3">
+        <input id="aBack1" oninput="analyze()" placeholder="Back 1">
+        <input id="aBack2" oninput="analyze()" placeholder="Back 2">
+        <input id="aBack3" oninput="analyze()" placeholder="Back 3">
+      </div>
+      <label style="margin-top:12px">Lay (Top 3)</label>
+      <div class="row3">
+        <input id="aLay1" oninput="analyze()" placeholder="Lay 1">
+        <input id="aLay2" oninput="analyze()" placeholder="Lay 2">
+        <input id="aLay3" oninput="analyze()" placeholder="Lay 3">
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Team B Ladder</h3>
+      <label>Back (Top 3)</label>
+      <div class="row3">
+        <input id="bBack1" oninput="analyze()" placeholder="Back 1">
+        <input id="bBack2" oninput="analyze()" placeholder="Back 2">
+        <input id="bBack3" oninput="analyze()" placeholder="Back 3">
+      </div>
+      <label style="margin-top:12px">Lay (Top 3)</label>
+      <div class="row3">
+        <input id="bLay1" oninput="analyze()" placeholder="Lay 1">
+        <input id="bLay2" oninput="analyze()" placeholder="Lay 2">
+        <input id="bLay3" oninput="analyze()" placeholder="Lay 3">
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 12">
+      <h3>Market Load Distribution</h3>
+      <div class="bar-wrap">
+        <div class="bar">
+          <div id="barA" class="a" style="width:50%"></div>
+          <div id="barB" class="b" style="width:50%"></div>
+        </div>
+      </div>
+      <div class="bar-labels">
+        <span id="labelA">Team A 50%</span>
+        <span id="labelB">Team B 50%</span>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 12">
+      <h3>Insights, Signals & Market Psychology</h3>
+      <div id="insights"></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>Educational & analytical use only • Manual ladder input</footer>
+
+<script>
+function sum(ids){return ids.reduce((t,id)=>t+(+document.getElementById(id).value||0),0)}
+function matchedInput(){const v=document.getElementById('matched').value.replace(/,/g,'');return parseInt(v||0)}
+
+function analyze(){
+  const A = teamA.value || 'Team A';
+  const B = teamB.value || 'Team B';
+
+  const matched = matchedInput();
+
+  const aBack = sum(['aBack1','aBack2','aBack3']);
+  const aLay  = sum(['aLay1','aLay2','aLay3']);
+  const bBack = sum(['bBack1','bBack2','bBack3']);
+  const bLay  = sum(['bLay1','bLay2','bLay3']);
+
+  const exposureA = Math.max(aBack, bLay);
+  const exposureB = Math.max(bBack, aLay);
+
+  const totalExposure = exposureA + exposureB || 1;
+
+  const pctA = Math.round((exposureA / totalExposure) * 100);
+  const pctB = 100 - pctA;
+
+  const amtA = Math.round(matched * pctA / 100);
+  const amtB = matched - amtA;
+
+  barA.style.width = pctA + '%';
+  barB.style.width = pctB + '%';
+
+  labelA.innerText = `${A} ${pctA}% (£${amtA.toLocaleString()})`;
+  labelB.innerText = `${B} ${pctB}% (£${amtB.toLocaleString()})`;
+
+  const loaded = exposureA > exposureB ? A : B;
+
+  let psychology = 'Balanced market. No clear dominance yet.';
+  if(pctA >= 70 || pctB >= 70) psychology = 'Extreme public bias. High trap probability.';
+  else if(pctA >= 60 || pctB >= 60) psychology = 'Strong public tilt. Smart money waits for spikes.';
+  else if(pctA >= 55 || pctB >= 55) psychology = 'Slight imbalance. Market flexible.';
+
+  insights.innerHTML = `
+    <div class="pill green">Loaded Team: ${loaded}</div>
+    <div class="pill amber">Matched Split → ${A}: £${amtA.toLocaleString()} | ${B}: £${amtB.toLocaleString()}</div>
+    <div class="pill red">Safer Entry Bias: ${loaded === A ? B : A}</div>
+    <p style="margin-top:14px;font-size:14px;color:var(--muted)"><b>Market Psychology:</b> ${psychology}</p>
+  `;
+}
+</script>
+
+</body>
+</html>
