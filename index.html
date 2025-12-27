@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Betfair Load Analyzer (3 Back / 3 Lay)</title>
+  <style>
+    :root{
+      --green:#1fbf75; --red:#e74c3c; --amber:#f1c40f;
+      --bg:#0f1220; --card:#171a2b; --text:#e9ecf1; --muted:#9aa3b2;
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(180deg,#0b0e1a,#121632);color:var(--text)}
+    header{padding:16px 20px;border-bottom:1px solid #232857}
+    h1{margin:0;font-size:20px}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{background:var(--card);border:1px solid #24286a;border-radius:14px;padding:14px}
+    .card h3{margin:0 0 10px;font-size:14px;color:#cfd5ff}
+    label{font-size:12px;color:var(--muted)}
+    input{width:100%;padding:10px;border-radius:10px;border:1px solid #2b2f74;background:#0e1130;color:var(--text)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .btn{padding:12px;border-radius:12px;border:0;background:#4f63ff;color:#fff;font-weight:600;cursor:pointer}
+    .btn.secondary{background:#2a2f7a}
+    .pill{display:inline-flex;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px}
+    .pill.green{background:rgba(31,191,117,.15);color:var(--green)}
+    .pill.red{background:rgba(231,76,60,.15);color:var(--red)}
+    .pill.amber{background:rgba(241,196,15,.15);color:var(--amber)}
+    .bar-wrap{background:#0b0f2a;border-radius:12px;overflow:hidden;border:1px solid #2b2f74}
+    .bar{height:22px;display:flex}
+    .bar .a{background:linear-gradient(90deg,#1fbf75,#16a085)}
+    .bar .b{background:linear-gradient(90deg,#e74c3c,#c0392b)}
+    .bar-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px dashed #2b2f74;font-size:13px}
+    th{text-align:left;color:#cfd5ff}
+    .hint{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Manual Betfair Load Analyzer</h1>
+  <div class="hint">3 Back + 3 Lay rows per team (ladder-style manual input)</div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Team Names</h3>
+      <div class="row">
+        <div><label>Team A</label><input id="teamA" placeholder="Team A"></div>
+        <div><label>Team B</label><input id="teamB" placeholder="Team B"></div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 6">
+      <h3>Actions</h3>
+      <button class="btn" onclick="analyze()">Analyze Load</button>
+      <button class="btn secondary" onclick="resetAll()">Reset</button>
+    </div>
+
+    <!-- TEAM A -->
+    <div class="card" style="grid-column:span 6">
+      <h3>Team A – Back (3 Rows)</h3>
+      <div class="row3">
+        <input id="aBack1" placeholder="Back 1">
+        <input id="aBack2" placeholder="Back 2">
+        <input id="aBack3" placeholder="Back 3">
+      </div>
+      <h3 style="margin-top:10px">Team A – Lay (3 Rows)</h3>
+      <div class="row3">
+        <input id="aLay1" placeholder="Lay 1">
+        <input id="aLay2" placeholder="Lay 2">
+        <input id="aLay3" placeholder="Lay 3">
+      </div>
+    </div>
+
+    <!-- TEAM B -->
+    <div class="card" style="grid-column:span 6">
+      <h3>Team B – Back (3 Rows)</h3>
+      <div class="row3">
+        <input id="bBack1" placeholder="Back 1">
+        <input id="bBack2" placeholder="Back 2">
+        <input id="bBack3" placeholder="Back 3">
+      </div>
+      <h3 style="margin-top:10px">Team B – Lay (3 Rows)</h3>
+      <div class="row3">
+        <input id="bLay1" placeholder="Lay 1">
+        <input id="bLay2" placeholder="Lay 2">
+        <input id="bLay3" placeholder="Lay 3">
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card" style="grid-column:span 12">
+      <h3>Team-wise Load</h3>
+      <div class="bar-wrap">
+        <div class="bar">
+          <div id="barA" class="a" style="width:50%"></div>
+          <div id="barB" class="b" style="width:50%"></div>
+        </div>
+      </div>
+      <div class="bar-labels">
+        <span id="labelA">Team A 50%</span>
+        <span id="labelB">Team B 50%</span>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:span 12">
+      <h3>Insights</h3>
+      <div id="insights"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function sum(ids){
+  return ids.reduce((t,id)=>t+(+document.getElementById(id).value||0),0);
+}
+
+function analyze(){
+  const A = teamA.value || 'Team A';
+  const B = teamB.value || 'Team B';
+
+  const aBack = sum(['aBack1','aBack2','aBack3']);
+  const aLay  = sum(['aLay1','aLay2','aLay3']);
+  const bBack = sum(['bBack1','bBack2','bBack3']);
+  const bLay  = sum(['bLay1','bLay2','bLay3']);
+
+  const loadA = aBack - aLay;
+  const loadB = bBack - bLay;
+
+  const absA = Math.max(loadA,0);
+  const absB = Math.max(loadB,0);
+  const total = absA + absB || 1;
+
+  const pctA = Math.round(absA/total*100);
+  const pctB = 100 - pctA;
+
+  barA.style.width = pctA+'%';
+  barB.style.width = pctB+'%';
+  labelA.innerText = `${A} ${pctA}%`;
+  labelB.innerText = `${B} ${pctB}%`;
+
+  const loaded = loadA>loadB ? A : B;
+  const bookie = loadA>0 && loadB>0 ? 'Both sides public' : `Bookie risk on ${loaded}`;
+
+  insights.innerHTML = `
+    <div class="pill green">Loaded Team: ${loaded}</div>
+    <div class="pill amber" style="margin-left:8px">${bookie}</div>
+    <p class="hint" style="margin-top:8px">Entry generally safer opposite to heavy public load. Hedge when odds compress fast.</p>
+  `;
+}
+
+function resetAll(){
+  document.querySelectorAll('input').forEach(i=>i.value='');
+  barA.style.width='50%'; barB.style.width='50%';
+  labelA.innerText='Team A 50%'; labelB.innerText='Team B 50%';
+  insights.innerHTML='';
+}
+</script>
+</body>
+</html>
