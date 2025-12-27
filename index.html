@@ -143,6 +143,62 @@
     }
 
     footer{text-align:center;padding:18px;font-size:12px;color:var(--muted);opacity:.8}
+  
+
+    /* ========== MOBILE RESPONSIVE (PRO LEVEL) ========== */
+    @media (max-width: 900px){
+      .grid{grid-template-columns:repeat(6,1fr)}
+      .card{grid-column:span 6 !important}
+    }
+
+    @media (max-width: 600px){
+      header{flex-direction:column;gap:6px;text-align:center}
+      header h1{font-size:18px}
+
+      .wrap{padding:14px}
+      .grid{grid-template-columns:repeat(4,1fr);gap:12px}
+      .card{padding:16px;border-radius:16px}
+
+      .row{grid-template-columns:1fr}
+      .row3{grid-template-columns:1fr}
+
+      input{
+        padding:14px;
+        font-size:15px;
+      }
+
+      .btn{
+        width:100%;
+        padding:16px;
+        font-size:15px;
+      }
+
+      .bar-wrap{height:24px}
+
+      .bar-labels{
+        flex-direction:column;
+        gap:6px;
+        font-size:13px;
+        text-align:center;
+      }
+
+      .pill{
+        display:flex;
+        width:100%;
+        justify-content:center;
+        margin:6px 0;
+        font-size:13px;
+      }
+
+      footer{font-size:11px}
+    }
+
+    @media (max-width: 380px){
+      header h1{font-size:16px}
+      .card h3{font-size:12px}
+      input{font-size:14px}
+    }
+
   </style>
 </head>
 <body>
